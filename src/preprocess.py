@@ -253,8 +253,9 @@ def main():
         test_part = result[result["split"] == "test"]
 
         train_arr, scaler, channels = scale_and_export(train_part, fit=True)
-        val_arr, _, _ = scale_and_export(val_part, scaler, fit=False)
-        test_arr, _, _ = scale_and_export(test_part, scaler, fit=False)
+        n_feat = train_arr.shape[1]
+        val_arr = scale_and_export(val_part, scaler, fit=False)[0] if len(val_part) > 0 else np.empty((0, n_feat), dtype=np.float32)
+        test_arr = scale_and_export(test_part, scaler, fit=False)[0] if len(test_part) > 0 else np.empty((0, n_feat), dtype=np.float32)
 
         pt_path = OUT_DIR / f"unit_{unit_id}.pt"
         torch.save(
@@ -275,8 +276,8 @@ def main():
                 "train_arr": torch.tensor(train_arr),
                 "val_arr": torch.tensor(val_arr),
                 "test_arr": torch.tensor(test_arr),
-                "val_start_idx": len(train_arr) - CONTEXT_LENGTH,
-                "test_start_idx": len(train_arr) + len(val_arr) - CONTEXT_LENGTH,
+                "val_start_idx": max(0, len(train_arr) - CONTEXT_LENGTH),
+                "test_start_idx": max(0, len(train_arr) + len(val_arr) - CONTEXT_LENGTH),
             },
             pt_path,
         )
