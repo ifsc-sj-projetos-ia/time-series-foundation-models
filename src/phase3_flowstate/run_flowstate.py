@@ -17,12 +17,14 @@ UNIT_IDS = list(range(69))
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def load_model():
+def load_model(revision: str = "r1.0"):
     from tsfm_public import FlowStateForPrediction
 
-    model = FlowStateForPrediction.from_pretrained(
-        "ibm-granite/granite-timeseries-flowstate-r1"
-    )
+    kwargs = {"pretrained_model_name_or_path": "ibm-granite/granite-timeseries-flowstate-r1"}
+    if revision != "r1.0":
+        kwargs["revision"] = revision
+
+    model = FlowStateForPrediction.from_pretrained(**kwargs)
     model.to(DEVICE)
     model.eval()
     return model
@@ -70,6 +72,7 @@ def main(
     output_dir: str = None,
     context_length: int = 2048,
     scale_factor: float = 1.0,
+    revision: str = "r1.0",
     device: str = None,
 ):
     if device is None:
@@ -81,10 +84,10 @@ def main(
     output_path.mkdir(parents=True, exist_ok=True)
 
     print(f"Device: {device}")
-    print(f"Context: {context_length}, Scale factor: {scale_factor}")
+    print(f"Context: {context_length}, Scale factor: {scale_factor}, Revision: {revision}")
     print(f"Output: {output_path}")
-    print("Loading FlowState model (r1.0)...")
-    model = load_model()
+    print(f"Loading FlowState model ({revision})...")
+    model = load_model(revision=revision)
     print(f"Model params: {sum(p.numel() for p in model.parameters()):,}")
 
     all_results = []
@@ -119,7 +122,7 @@ def main(
     with open(summary_path, "w") as f:
         json.dump({
             "model": "flowstate",
-            "revision": "r1.0",
+            "revision": revision,
             "context_length": context_length,
             "scale_factor": scale_factor,
             "n_units": len(UNIT_IDS),
@@ -130,13 +133,15 @@ def main(
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--context", type=int, default=2048, choices=[512, 2048])
+    parser.add_argument("--context", type=int, default=2048, choices=[512, 2048, 4096])
     parser.add_argument("--scale", type=float, default=1.0)
+    parser.add_argument("--revision", default="r1.0", choices=["r1.0", "r1.1"])
     parser.add_argument("--device", default=DEVICE)
     args = parser.parse_args()
 
     main(
         context_length=args.context,
         scale_factor=args.scale,
+        revision=args.revision,
         device=args.device,
     )

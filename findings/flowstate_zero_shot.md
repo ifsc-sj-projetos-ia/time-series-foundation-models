@@ -18,7 +18,8 @@
 |---|---|---|---|---|---|
 | TTM2 L2 (`512-96-ft-r2.1`) | 512 | 202.33 | 107.73 | 106.4% | 46.2% |
 | FlowState r1.0 | 512 | 201.94 | **90.08** | 103.3% | **38.9%** |
-| FlowState r1.0 | **2048** | **181.71** | 92.36 | **99.6%** | 39.6% |
+| FlowState r1.0 | 2048 | **181.71** | 92.36 | **99.6%** | 39.6% |
+| FlowState r1.1 | 4096 | 183.63 | 98.07 | 94.2% | 39.9% |
 
 **Key findings:**
 
@@ -26,7 +27,9 @@
 
 2. **More context (2048) helps export, not import** — export MAE drops from 202 to 182 (-10%), but import stays essentially flat (90 → 92). Solar production benefits from longer weather-pattern history; consumption's daily cycles are already captured at 512.
 
-3. **FlowState is efficient** — 3–6s for all 69 units × 2 targets on GTX 1650, comparable to TTM2's 0.8s.
+3. **r1.1 does not outperform r1.0** — at context=4096, r1.1 (18.5M params) gives marginally worse MAE than r1.0 (9M) at context=2048. The longer context may include irrelevant seasonal data, and the larger model adds no benefit for this dataset.
+
+4. **FlowState is efficient** — 3–6s per full run on GTX 1650, comparable to TTM2's 0.8s. r1.1 takes 17s but offers no improvement.
 
 ## Scale Factor Sweep
 
@@ -44,7 +47,7 @@ Tested 5 scale factors on 5 representative units (0, 3, 6, 30, 60) at context=20
 
 ## Hardware
 
-FlowState r1.0 runs comfortably on GTX 1650 (4GB VRAM) at batch=1 with both 512 and 2048 context. Peak VRAM usage ~3.2 GB during S5 FFT convolution. No Colab needed for r1.0.
+Both r1.0 and r1.1 run comfortably on GTX 1650 (4GB VRAM). r1.0 at context=2048 uses ~3.2 GB peak VRAM; r1.1 at context=4096 uses only ~0.13 GB during the FFT convolution (PyTorch's memory management is more efficient than expected). No Colab needed for either revision.
 
 ## Files
 
