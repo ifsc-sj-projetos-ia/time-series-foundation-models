@@ -1,0 +1,8 @@
+{
+  "model": "flowstate",
+  "revision": "r1.0",
+  "context_length": 512,
+  "scale_factor": 1.0,
+  "n_units": 69,
+  "elapsed_seconds": 3.4
+}
