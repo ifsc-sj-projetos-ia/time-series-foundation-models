@@ -8,17 +8,17 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
-from src.datasets import load_unit, unscale, get_zero_shot_context
-from src.eval import compute_metrics
+from src.shared.datasets import load_unit, get_zero_shot_context
+from src.shared.eval import compute_metrics
+from src.phase2_baselines.baselines import persistence_baseline, seasonal_naive_baseline
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-RESULTS_DIR = Path("results")
-RESULTS_DIR.mkdir(exist_ok=True)
+RESULTS_DIR = Path("results/phase2/l2_zero_shot")
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET_COLS = ["target_export", "target_import"]
 UNIT_IDS = list(range(69))
 
-SEASONAL_PERIOD = 24
 FREQ_TOKEN = 7
 
 
@@ -34,20 +34,6 @@ def load_model():
     model.to(device)
     model.eval()
     return model
-
-
-def persistence_baseline(ctx, fcst_len):
-    last = ctx[:, -1:, :]
-    return last.repeat(1, fcst_len, 1)
-
-
-def seasonal_naive_baseline(ctx, fcst_len, period=SEASONAL_PERIOD):
-    if ctx.shape[1] < period:
-        return persistence_baseline(ctx, fcst_len)
-    recent = ctx[:, -period:, :]
-    repeats = (fcst_len + period - 1) // period
-    tiled = recent.repeat(1, repeats, 1)
-    return tiled[:, :fcst_len, :]
 
 
 def run_unit(model, unit_id: int):
@@ -107,7 +93,7 @@ def run_unit(model, unit_id: int):
 def main():
     print(f"Device: {device}")
     print(f"Units: {len(UNIT_IDS)}")
-    print("Loading TTM2 model...")
+    print("Loading TTM2 model (revision: 512-96-ft-r2.1, L2/MSE)...")
     model = load_model()
     print(f"Model params: {sum(p.numel() for p in model.parameters()):,}")
 
@@ -127,7 +113,7 @@ def main():
     print(f"\nDone in {elapsed:.1f}s ({elapsed / len(UNIT_IDS):.1f}s per unit)")
 
     df = pd.DataFrame(all_results)
-    csv_path = RESULTS_DIR / "zero_shot_metrics.csv"
+    csv_path = RESULTS_DIR / "metrics.csv"
     df.to_csv(csv_path, index=False)
     print(f"Saved: {csv_path}")
 
@@ -141,8 +127,10 @@ def main():
     else:
         print("No results collected.")
 
-    summary_path = RESULTS_DIR / "zero_shot_summary.json"
+    summary_path = RESULTS_DIR / "summary.json"
     summary = {
+        "revision": "512-96-ft-r2.1",
+        "loss": "L2 (MSE)",
         "n_units": len(UNIT_IDS),
         "elapsed_seconds": round(elapsed, 1),
         "results_file": str(csv_path),

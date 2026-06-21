@@ -1,0 +1,7 @@
+{
+  "revision": "512-96-ft-r2.1",
+  "loss": "L2 (MSE)",
+  "n_units": 69,
+  "elapsed_seconds": 9.0,
+  "results_file": "results/phase2/l2_zero_shot/metrics.csv"
+}
