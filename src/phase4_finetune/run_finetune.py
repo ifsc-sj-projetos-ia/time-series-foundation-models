@@ -175,7 +175,10 @@ def fine_tune_unit(
     target_std = data["scaler_std"][ch_idx]
 
     model.eval()
-    ctx_raw = data["train_arr"][-context_length:, ch_idx].unsqueeze(-1)
+    ctx_cols = [ch_idx] if exog_ch_idxs is None else channel_idxs
+    ctx_raw = data["train_arr"][-context_length:, ctx_cols]
+    if ctx_raw.ndim == 1:
+        ctx_raw = ctx_raw.unsqueeze(-1)
     ctx = ctx_raw.unsqueeze(0).to(device)
     with torch.no_grad():
         freq_tensor = torch.full((1,), 7, dtype=torch.long, device=device)

@@ -1,0 +1,57 @@
+{
+  "top_configs": [
+    {
+      "run_id": 3,
+      "revision": "512-96-ft-r2.1",
+      "freeze_backbone": true,
+      "fewshot_fraction": 0.05,
+      "smape": 46.53205871582031,
+      "mae": 165.24819946289062,
+      "rmse": 195.78811091330343
+    },
+    {
+      "run_id": 4,
+      "revision": "512-96-ft-l1-r2.1",
+      "freeze_backbone": false,
+      "fewshot_fraction": 0.2,
+      "smape": 48.84994125366211,
+      "mae": 156.9040069580078,
+      "rmse": 177.56713629110823
+    },
+    {
+      "run_id": 1,
+      "revision": "512-96-ft-l1-r2.1",
+      "freeze_backbone": true,
+      "fewshot_fraction": 0.2,
+      "smape": 49.05137252807617,
+      "mae": 150.09487915039062,
+      "rmse": 183.71460118210527
+    },
+    {
+      "run_id": 2,
+      "revision": "512-96-ft-r2.1",
+      "freeze_backbone": false,
+      "fewshot_fraction": 0.2,
+      "smape": 52.61963653564453,
+      "mae": 175.37461853027344,
+      "rmse": 207.13839915923364
+    },
+    {
+      "run_id": 8,
+      "revision": "512-96-ft-r2.1",
+      "freeze_backbone": true,
+      "fewshot_fraction": 0.125,
+      "smape": 57.79241943359375,
+      "mae": 204.679931640625,
+      "rmse": 240.25237381761704
+    }
+  ],
+  "main_effects": {
+    "C": -0.4141368473237138,
+    "A": 0.06880027716652412,
+    "B": 0.2245674986501248
+  },
+  "n_success": 10,
+  "n_failed": 0,
+  "total_seconds": 9.6
+}
