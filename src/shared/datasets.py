@@ -42,7 +42,7 @@ def get_zero_shot_context(unit_data: dict, channel_idx: int = None):
 
 
 class ProsumerDataset(Dataset):
-    def __init__(self, unit_id: int, split: str = "train", channels: list = None):
+    def __init__(self, unit_id: int, split: str = "train", channels: list = None, stride: int = None):
         data = load_unit(unit_id)
         self.ctx_len = data["context_length"]
         self.fcst_len = data["forecast_length"]
@@ -65,7 +65,7 @@ class ProsumerDataset(Dataset):
 
         self.x = []
         self.y = []
-        stride = self.fcst_len
+        stride = self.fcst_len if stride is None else stride
         for i in range(0, len(arr) - self.ctx_len - self.fcst_len + 1, stride):
             self.x.append(arr[i:i + self.ctx_len])
             self.y.append(arr[i + self.ctx_len:i + self.ctx_len + self.fcst_len])
