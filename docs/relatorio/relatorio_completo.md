@@ -4,11 +4,12 @@ A crescente popularização de fontes renováveis distribuídas, como painéis s
 
 Este trabalho compara dois modelos de fundação para séries temporais (*time series foundation models*) da família IBM Granite, o **TinyTimeMixer v2 (TTM2)** e o **FlowState**, na tarefa de previsão horária de produção e consumo de energia de prosumers na Estônia. Ambos os modelos são pré-treinados em grandes volumes de dados heterogêneos e podem ser aplicados sem ajuste fino (*zero-shot*) ou com adaptação supervisionada (*fine-tuning*). O FlowState, baseado em *State Space Models* (SSM) com decodificador funcional contínuo, representa a geração mais recente da família; o TTM2, baseado em *MLP Mixers* compactos (cerca de 1 milhão de parâmetros), é a geração anterior. A comparação busca quantificar o ganho real da arquitetura SSM sobre a MLP no contexto específico de energia elétrica.
 
-O conjunto de dados utilizado é o *Predict Energy Behavior of Prosumers*, disponibilizado pela Enefit (concessionária estoniana) via Kaggle, contendo 69 unidades de previsão distribuídas em 16 condados, com dados horários de setembro de 2021 a maio de 2023. As covariáveis incluem temperatura, radiação solar, velocidade do vento, precipitação, preço horário de eletricidade e capacidade instalada por unidade consumidora.
+O conjunto de dados utilizado é o *Predict Energy Behavior of Prosumers*, disponibilizado pela Enefit (concessionária estoniana) via Kaggle, com 69 unidades de previsão e registro horário de setembro de 2021 a maio de 2023, enriquecido com covariáveis meteorológicas e de mercado.
 
 As métricas de avaliação adotadas são MAE (*Mean Absolute Error*), RMSE (*Root Mean Squared Error*) e SMAPE (*Symmetric Mean Absolute Percentage Error*). O SMAPE é utilizado como métrica primária por ser limitada entre 0 e 200% e robusta a valores próximos de zero, comuns em séries de geração solar noturna, evitando a instabilidade numérica do MAPE tradicional nesses cenários.
 
 Os resultados indicam que o FlowState r1.0 com contexto de 2048 timesteps supera consistentemente o TTM2 e todas as linhas de base (*persistence* e *seasonal naive*) em ambas as variáveis-alvo, tanto na avaliação por unidade individual quanto na agregação nacional, estabelecendo-se como a melhor configuração para este conjunto de dados.
+
 **2. Dados e Metodologia**
 
 **2.1 Conjunto de Dados**
@@ -59,6 +60,7 @@ Todos os modelos foram executados localmente na GPU GTX 1650 (3,9 GB VRAM). Nenh
 As métricas foram calculadas separadamente por unidade de previsão e por variável-alvo, mantendo a granularidade completa dos dados. A agregação nacional (soma das 69 unidades) é fornecida como tabela suplementar para comparação com *benchmarks* anteriores.
 
 O SMAPE é adotado como métrica primária por sua robustez a valores próximos de zero, frequentes na geração solar noturna, que tornam o MAPE instável e dominado por denominadores muito pequenos.
+
 **3. Experimentos e Resultados**
 
 **3.1 Planejamento Experimental**
@@ -100,6 +102,11 @@ A agregação nacional (soma das 69 unidades) produz estimativas pontuais para t
 | **FlowState ctx2048** | **9.862** | **80,5%** | **4.542** | **20,0%** |
 
 A agregação reduz o ruído estocástico por unidade e produz valores de SMAPE significativamente mais baixos. O MAPE de *target_import*, que atinge 355% na média por unidade (inflado por denominadores pequenos em unidades com baixo consumo), cai para 28,5% no dado nacional. Em *target_export*, o SMAPE cai de aproximadamente 100% (média por unidade) para 80,5% (nacional). Estes valores são consistentes com *benchmarks* anteriores da literatura para previsão agregada de carga elétrica.
+
+**3.5 Sensibilidade ao Fator de Escala (FlowState)**
+
+O FlowState possui um hiperparâmetro *scale_factor* que ajusta a discretização temporal do decodificador funcional contínuo, permitindo adaptar a previsão à taxa de amostragem dos dados. Uma varredura em cinco valores (0,25; 0,50; 1,00; 2,00; 4,00) sobre as cinco unidades representativas confirmou que *scale_factor=1,0* é o valor ótimo para dados horários, consistente com a recomendação da documentação do modelo. Valores acima de 2,0 degradam acentuadamente o desempenho (MAE ~280 contra ~106 em 1,0 para *target_export*), indicando que o decodificador superestima a periodicidade dos dados. O fator padrão foi mantido em todos os experimentos.
+
 **4. Discussão**
 
 **4.1 Limitações do Estudo**
@@ -149,13 +156,14 @@ O FlowState r1.0 superou o TTM2 em todas as configurações *zero-shot* e em amb
 3. **Decodificador funcional contínuo**: o *Functional Basis Decoder* (FBD) projeta o estado latente do codificador em uma base de funções contínuas (polinômios de Legendre), permitindo amostrar a previsão em qualquer resolução temporal. Embora o fator de escala (*scale_factor*) ótimo tenha se confirmado como 1,0 para dados horários (o padrão recomendado), a flexibilidade do decodificador confere ao modelo uma capacidade de generalização que o decodificador linear do TTM2 não possui.
 
 A combinação desses fatores torna o FlowState particularmente adequado para séries temporais energéticas, onde múltiplas escalas temporais (horária, diária, semanal) interagem de forma não trivial.
+
 **5. Conclusão e Trabalhos Futuros**
 
 Este trabalho comparou dois modelos de fundação para séries temporais da família IBM Granite — o TinyTimeMixer v2 (TTM2) e o FlowState — na tarefa de previsão horária de produção e consumo de energia de prosumers na Estônia, utilizando o *dataset* Enefit com 69 unidades de previsão distribuídas em 16 condados. Seis configurações foram avaliadas, incluindo duas linhas de base clássicas, três variantes do FlowState e duas do TTM2.
 
 O FlowState r1.0 com contexto de 2048 *timesteps* foi o melhor modelo em todas as métricas e em ambas as variáveis-alvo, tanto na avaliação por unidade individual quanto na agregação nacional. Na variável de consumo (*target_import*), o MAE médio por unidade foi de 92,4 (contra 107,7 do TTM2 zero-shot) e o SMAPE de 39,6%. Na variável de geração (*target_export*), o MAE foi de 181,7 (contra 202,3) e o SMAPE de 99,6%. O ganho relativo é maior em geração do que em consumo — resultado esperado, uma vez que a geração solar é intrinsecamente mais dependente de padrões meteorológicos de longo prazo, que o contexto de 2048 passos captura melhor que os 512 do TTM2.
 
-O TTM2 *zero-shot* mostrou-se competitivo, especialmente em consumo, mas consistentemente atrás do FlowState. A tentativa de melhorar seu desempenho via *fine-tuning* revelou que a densidade das janelas de treinamento é o fator crítico: com janelas não sobrepostas (passo 96), o SMAPE foi de apenas 55,8%; com janelas densas (passo 1), o SMAPE na unidade 0 atingiu 38,6%, superando marginalmente o FlowState na mesma unidade (38,9%). O MAE, no entanto, permaneceu superior (121,2 vs 92,4), indicando que o ganho em erro relativo não se traduziu em ganho absoluto. A validação nas 69 unidades não foi concluída devido ao custo computacional, permanecendo como trabalho futuro.
+O TTM2 *zero-shot* mostrou-se competitivo, especialmente em consumo, mas consistentemente atrás do FlowState. O *fine-tuning* com janelas densas reduziu o SMAPE na unidade 0 para 38,6% (contra 55,8% com janelas esparsas), mas o MAE permaneceu acima do FlowState, e a validação nas 69 unidades não foi concluída.
 
 A versão mais recente do FlowState (r1.1, 18,5 milhões de parâmetros, contexto 4096) não apresentou melhoria em relação ao r1.0 (9 milhões, contexto 2048), sugerindo um ponto de saturação em que mais parâmetros e mais contexto não agregam informação adicional para este domínio.
 
