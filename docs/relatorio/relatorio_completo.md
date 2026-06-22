@@ -165,7 +165,7 @@ O FlowState r1.0 com contexto de 2.048 *timesteps* foi o melhor modelo em todas 
 
 O TTM2 mostrou-se competitivo, mas consistentemente atrás. O *fine-tuning* com janelas densas (passo 1) reduziu o SMAPE na unidade 0 para 38,6%, porém o MAE permaneceu acima do FlowState, e a validação nas 69 unidades não foi concluída. A metodologia DoE aplicada ao *fine-tuning* revelou-se útil: dois fatores foram descartados ainda na triagem por incompatibilidade arquitetural, e o efeito principal mais relevante foi a fração de dados de treino. O *Seasonal Naive* obteve SMAPE de 39,9% em consumo, virtualmente empatado com os modelos de fundação, evidenciando que séries com forte componente periódica exigem comparação contra uma linha de base sazonal.
 
-Trabalhos futuros incluem: validação do TTM2 *fine-tuned* nas 69 unidades; teste de *fine-tuning* do FlowState quando disponível; incorporação de covariáveis meteorológicas; expansão do período de teste; e replicação em outros *datasets* de energia (ONS Brasil, NREL EUA).
+Trabalhos futuros incluem: validação do TTM2 *fine-tuned* nas 69 unidades; teste de *fine-tuning* do FlowState quando disponível; incorporação de covariáveis meteorológicas como radiação solar e temperatura para melhorar a previsão da geração — o que exigiria adaptação arquitetural para fornecer valores futuros das covariáveis durante a inferência, limitação encontrada neste estudo; expansão do período de teste; e replicação em outros *datasets* de energia (ONS Brasil, NREL EUA).
 
 **6. Reprodução**
 
