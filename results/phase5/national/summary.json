@@ -1,0 +1,10 @@
+{
+  "models": {
+    "baselines": true,
+    "ttm2_zero": true,
+    "flowstate_ctx512": false,
+    "flowstate_ctx2048": true
+  },
+  "elapsed_seconds": 12.7,
+  "n_units": 69
+}

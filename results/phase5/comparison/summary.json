@@ -1,0 +1,12 @@
+{
+  "n_models": 6,
+  "n_targets": 2,
+  "sources": [
+    "results/phase2/l2_zero_shot/metrics.csv",
+    "results/phase2/l2_zero_shot/metrics.csv",
+    "results/phase2/l2_zero_shot/metrics.csv",
+    "results/phase3/flowstate_ctx512/metrics.csv",
+    "results/phase3/flowstate_ctx2048/metrics.csv",
+    "results/phase3/flowstate_ctx4096/metrics.csv"
+  ]
+}
