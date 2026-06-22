@@ -159,19 +159,13 @@ A combinação desses fatores torna o FlowState particularmente adequado para s�
 
 **5. Conclusão e Trabalhos Futuros**
 
-Este trabalho comparou dois modelos de fundação para séries temporais da família IBM Granite, o TinyTimeMixer v2 (TTM2) e o FlowState, na tarefa de previsão horária de produção e consumo de energia de prosumers na Estônia, utilizando o *dataset* Enefit com 69 unidades de previsão distribuídas em 16 condados. Seis configurações foram avaliadas, incluindo duas linhas de base clássicas, três variantes do FlowState e duas do TTM2.
+Este trabalho comparou dois modelos de fundação para séries temporais da família IBM Granite — TinyTimeMixer v2 (TTM2) e FlowState — na previsão horária de produção e consumo de energia de prosumers na Estônia, utilizando o *dataset* Enefit com 69 unidades de previsão. Seis configurações foram avaliadas.
 
-O FlowState r1.0 com contexto de 2048 *timesteps* foi o melhor modelo em todas as métricas e em ambas as variáveis-alvo, tanto na avaliação por unidade individual quanto na agregação nacional. Na variável de consumo (*target_import*), o MAE médio por unidade foi de 92,4 (contra 107,7 do TTM2 zero-shot) e o SMAPE de 39,6%. Na variável de geração (*target_export*), o MAE foi de 181,7 (contra 202,3) e o SMAPE de 99,6%. O ganho relativo é maior em geração do que em consumo, resultado esperado, uma vez que a geração solar é intrinsecamente mais dependente de padrões meteorológicos de longo prazo, que o contexto de 2048 passos captura melhor que os 512 do TTM2.
+O FlowState r1.0 com contexto de 2.048 *timesteps* foi o melhor modelo em todas as métricas e em ambas as variáveis-alvo: MAE de 92,4 em consumo e 181,7 em geração, contra 107,7 e 202,3 do TTM2 *zero-shot*. O ganho é maior em geração, cuja dependência de padrões meteorológicos de longo prazo favorece o contexto mais longo do FlowState. A versão r1.1 (18,5 milhões de parâmetros) não superou a r1.0 (9 milhões), indicando saturação.
 
-O TTM2 *zero-shot* mostrou-se competitivo, especialmente em consumo, mas consistentemente atrás do FlowState. O *fine-tuning* com janelas densas reduziu o SMAPE na unidade 0 para 38,6% (contra 55,8% com janelas esparsas), mas o MAE permaneceu acima do FlowState, e a validação nas 69 unidades não foi concluída.
+O TTM2 mostrou-se competitivo, mas consistentemente atrás. O *fine-tuning* com janelas densas (passo 1) reduziu o SMAPE na unidade 0 para 38,6%, porém o MAE permaneceu acima do FlowState, e a validação nas 69 unidades não foi concluída. A metodologia DoE aplicada ao *fine-tuning* revelou-se útil: dois fatores foram descartados ainda na triagem por incompatibilidade arquitetural, e o efeito principal mais relevante foi a fração de dados de treino. O *Seasonal Naive* obteve SMAPE de 39,9% em consumo, virtualmente empatado com os modelos de fundação, evidenciando que séries com forte componente periódica exigem comparação contra uma linha de base sazonal.
 
-A versão mais recente do FlowState (r1.1, 18,5 milhões de parâmetros, contexto 4096) não apresentou melhoria em relação ao r1.0 (9 milhões, contexto 2048), sugerindo um ponto de saturação em que mais parâmetros e mais contexto não agregam informação adicional para este domínio.
-
-A metodologia DoE (*Design of Experiments*) aplicada ao *fine-tuning* do TTM2 demonstrou sua utilidade na triagem de fatores: dois dos cinco fatores inicialmente planejados (contexto e covariáveis) foram descartados ainda na fase de triagem por incompatibilidade arquitetural, evitando experimentos inviáveis e concentrando o esforço computacional nos fatores que realmente importam. O efeito principal mais relevante foi a fração de dados de treino (correlação de -0,41 com SMAPE), confirmando que a quantidade de dados é mais determinante que a escolha da revisão do modelo (L1 vs L2) ou o congelamento do *backbone*.
-
-O *Seasonal Naive*, um modelo trivial que repete o ciclo de 24 horas, obteve SMAPE de 39,9% em consumo, virtualmente empatado com os melhores modelos de fundação (38,9%). Este resultado é uma advertência metodológica importante: em séries com forte componente periódica, modelos sofisticados devem ser comparados contra uma linha de base sazonal, não apenas contra a persistência ingênua.
-
-Trabalhos futuros incluem: (1) conclusão da validação do TTM2 *fine-tuned* com janelas densas nas 69 unidades de previsão, para confirmar se o ganho observado na unidade 0 se generaliza; (2) teste de *fine-tuning* do FlowState, caso venha a ser disponibilizado em versões futuras da biblioteca *granite-tsfm*; (3) incorporação de covariáveis meteorológicas, particularmente radiação solar prevista, que exigiria modificação no protocolo de avaliação para fornecer valores futuros das covariáveis durante a inferência; (4) expansão do período de teste para capturar eventos sazonais extremos (ondas de frio, picos de demanda); e (5) replicação da comparação em outros *datasets* de energia, como os do ONS (Brasil) e NREL (EUA), para verificar se a superioridade do FlowState se mantém em diferentes contextos climáticos e de mercado.
+Trabalhos futuros incluem: validação do TTM2 *fine-tuned* nas 69 unidades; teste de *fine-tuning* do FlowState quando disponível; incorporação de covariáveis meteorológicas; expansão do período de teste; e replicação em outros *datasets* de energia (ONS Brasil, NREL EUA).
 
 **6. Reprodução**
 
@@ -234,3 +228,17 @@ python -m src.phase5_report.national_aggregation
 ```
 
 **Hardware**: todos os experimentos foram executados em uma GPU NVIDIA GeForce GTX 1650 com 4 GB de VRAM e 8 GB de RAM de sistema. O FlowState r1.0 requer aproximadamente 3,5 GB de VRAM em pico (durante a convolução FFT da camada S5); o TTM2 requer menos de 0,5 GB. Ambos os modelos podem ser executados em CPU, embora com tempo de inferência proporcionalmente maior. Nenhuma infraestrutura em nuvem é necessária para reproduzir os resultados deste relatório.
+
+**REFERÊNCIAS**
+
+BOX, G. E. P.; HUNTER, J. S.; HUNTER, W. G. *Statistics for Experimenters*: design, innovation, and discovery. 2. ed. Hoboken: Wiley, 2005.
+
+EKAMBARAM, V. et al. Tiny Time Mixers (TTMs): fast pre-trained models for enhanced zero/few-shot forecasting of multivariate time series. *Advances in Neural Information Processing Systems (NeurIPS)*, 2024. Disponível em: https://proceedings.neurips.cc/paper_files/paper/2024/hash/874a4d89f2d04b4bcf9a2c19545cf040-Abstract-Conference.html. Acesso em: jun. 2026.
+
+GRAF, L. et al. FlowState: sampling rate invariant time series forecasting. *arXiv preprint*, arXiv:2508.05287, 2025. Disponível em: https://arxiv.org/abs/2508.05287. Acesso em: jun. 2026.
+
+IBM. Granite-TimeSeries-TTM-R2. *Hugging Face Model Card*, 2024. Disponível em: https://huggingface.co/ibm-granite/granite-timeseries-ttm-r2. Acesso em: jun. 2026.
+
+IBM. Granite-TimeSeries-FlowState-R1. *Hugging Face Model Card*, 2025. Disponível em: https://huggingface.co/ibm-granite/granite-timeseries-flowstate-r1. Acesso em: jun. 2026.
+
+MONTGOMERY, D. C. *Design and Analysis of Experiments*. 8. ed. Hoboken: John Wiley & Sons, 2013.
